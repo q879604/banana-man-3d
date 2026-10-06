@@ -1,0 +1,11 @@
+{
+  "name": "banana-man-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Banana Man 3D - 纯静态 3D 香蕉人互动页（Cloudflare Workers 静态资源部署）",
+  "scripts": {
+    "deploy": "npx wrangler deploy",
+    "dev": "npx wrangler dev",
+    "preview": "npx wrangler deploy --dry-run"
+  }
+}
