@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<meta charset="utf-8">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#150f2e">
-  <meta name="description" content="一个可以直接用手拖动环绕、缩放观看的 3D 香蕉人，背景是流动的抽象极光。">
-  <title>香蕉人 3D · Banana Man</title>
+  <meta name="description" content="给焦易轩的 3D 香蕉人：拖动环绕、缩放观看，背景是流动的抽象极光。">
+  <title>香蕉人 3D · 焦易轩</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M22 4c4 6 2 16-6 20-6 3-11 0-11-4 0-3 3-4 6-6 5-3 8-7 11-10z' fill='%23ffd93b'/%3E%3Ccircle cx='15' cy='13' r='3' fill='%23fff'/%3E%3Ccircle cx='15.6' cy='13.4' r='1.6' fill='%231b1b22'/%3E%3C/svg%3E">
 <style>
 /* ==================================================================
@@ -92,6 +93,25 @@ body {
   color: var(--ink-dim);
   letter-spacing: .02em;
   line-height: 1.6;
+}
+
+.hud-owner {
+  margin: .5em 0 0;
+  font-size: clamp(12.5px, 2.9vw, 15.5px);
+  color: var(--ink);
+  letter-spacing: .03em;
+  line-height: 1.5;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .6);
+}
+
+.hud-owner b {
+  font-weight: 800;
+  padding: 1px 9px;
+  margin: 0 2px;
+  border-radius: 8px;
+  color: #1b1230;
+  background: linear-gradient(96deg, var(--accent), #ffb43a);
+  box-shadow: 0 3px 16px rgba(255, 217, 59, .35);
 }
 
 .hud-bl {
@@ -313,6 +333,7 @@ body {
 <!-- 角标 -->
 <div class="hud hud-tl">
   <h1>香蕉人 <span>3D</span></h1>
+  <p class="hud-owner">送给 <b>焦易轩</b> · 专属 3D 小站</p>
   <p class="sub">拖动环绕 · 滚轮 / 捏合缩放 · 点击它有惊喜</p>
 </div>
 
@@ -322,6 +343,7 @@ body {
   <span class="k">点击</span> 互动
   <span class="k">空格</span> 暂停
   <span class="k">T</span> 换背景
+  <span class="k">N</span> 铭牌
 </div>
 
 <!-- 工具栏 -->
@@ -329,6 +351,10 @@ body {
   <button id="btn-rotate" class="tbtn on" title="暂停 / 继续自动旋转（空格）">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4V1L8 5l4 4V6a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
     <span>自转</span>
+  </button>
+  <button id="btn-plate" class="tbtn on" title="显示 / 隐藏头顶名字铭牌（N）">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-6l-2.6 3.2a.5.5 0 0 1-.8 0L8 16H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm3.5 5.2a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zm9 0a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6zM8 12.4c1 1.1 2.4 1.6 4 1.6s3-.5 4-1.6l-1.1-1c-.7.7-1.7 1.1-2.9 1.1s-2.2-.4-2.9-1.1L8 12.4z"/></svg>
+    <span>铭牌</span>
   </button>
   <button id="btn-theme" class="tbtn" title="切换背景主题（T）">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.3A4.7 4.7 0 0 0 22 9.8C22 6 17.5 3 12 3zM6.5 12A1.5 1.5 0 1 1 8 10.5 1.5 1.5 0 0 1 6.5 12zm3-4A1.5 1.5 0 1 1 11 6.5 1.5 1.5 0 0 1 9.5 8zm5 0A1.5 1.5 0 1 1 16 6.5 1.5 1.5 0 0 1 14.5 8zm3.5 4A1.5 1.5 0 1 1 19.5 10.5 1.5 1.5 0 0 1 18 12z"/></svg>
@@ -358,7 +384,7 @@ body {
 
 <script>
 /*
-  香蕉人 3D · Banana Man —— 单文件版
+  香蕉人 3D · 焦易轩 —— 单文件版
   整套项目（three.js r169 + 建模 + 场景 + 交互 + 样式）已内联在这一个文件里。
   · 直接双击打开即可（file:// 也能跑，无需服务器、无需联网、无外部依赖）
   · 也可以丢到任意静态托管直接部署
@@ -372,7 +398,7 @@ body {
 var __BM = {};
 var __BM_READY = false;
 
-/* ============ 1/5  three.js r169（MIT） ============ */
+/* ============ 1/6  three.js r169（MIT） ============ */
 { 'use strict';
 /**
  * @license
@@ -54533,7 +54559,7 @@ ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, Ad
 };
 }
 
-/* ============ 2/5  OrbitControls ============ */
+/* ============ 2/6  OrbitControls ============ */
 { 'use strict';
 const { Controls, MOUSE, Quaternion, Spherical, TOUCH, Vector2, Vector3, Plane, Ray, MathUtils } = __BM.THREE;
 
@@ -56049,7 +56075,7 @@ function interceptControlUp( event ) {
 __BM.OrbitControls = OrbitControls;
 }
 
-/* ============ 3/5  香蕉人建模 ============ */
+/* ============ 3/6  香蕉人建模 ============ */
 { 'use strict';
 /**
  * banana.js —— 香蕉人的程序化建模
@@ -56062,6 +56088,11 @@ __BM.OrbitControls = OrbitControls;
  * 身体 = 沿 XY 平面内的二次贝塞尔曲线扫掠「变半径 + 带纵棱」的截面；
  * 标架固定为：切线 T 在曲线平面内，副法线 B 恒为 +Z，
  * 因此 theta = PI/2 永远指向 +Z，也就是角色的「正脸朝向」。
+ *
+ * 造型要点（2026-10 优化）：
+ *   · 截面用「主脊 + 次谐波」双频调制，比单一余弦更像真香蕉的钝棱；
+ *   · 机身更瘦更高，果柄（蒂）与花蒂两端做收尖；
+ *   · 眼睛可以「看镜头」——setGaze() 把瞳孔推向指定方向。
  */
 
 const THREE = __BM.THREE;
@@ -56073,9 +56104,11 @@ const PALETTE = {
   peel: 0xffd93b,
   peelDark: 0xf0bf14,
   tip: 0x8a5a2b,
+  tipDark: 0x6d4520,
   eyeWhite: 0xffffff,
   pupil: 0x1b1b22,
   mouth: 0x2a1f1a,
+  tongue: 0xff7a9c,
   blush: 0xff9fb4,
   glove: 0xfdfdfd,
   shoe: 0x2f2f38,
@@ -56085,28 +56118,31 @@ const PALETTE = {
 /* 造型参数（改这里微调体型）                                          */
 /* ------------------------------------------------------------------ */
 const CONFIG = {
-  curveP0: [-0.22, 0.44, 0],
-  curveP1: [0.52, 1.50, 0],
-  curveP2: [-0.20, 2.58, 0],
+  curveP0: [-0.20, 0.40, 0],
+  curveP1: [0.54, 1.52, 0],
+  curveP2: [-0.19, 2.70, 0],
 
-  bodyRadius: 0.44,
-  bodySegs: 150,
-  radialSegs: 48,
+  bodyRadius: 0.405,
+  bodySegs: 160,
+  radialSegs: 52,
   ribCount: 5,
-  ribAmp: 0.05,
-  squashZ: 1.06,
-  taperTop: 0.46,
-  taperBottom: 0.34,
+  ribAmp: 0.062,
+  ribSecond: 0.26,
+  squashZ: 1.035,
+  taperTop: 0.50,
+  taperBottom: 0.40,
 
-  faceT: 0.72,
+  faceT: 0.70,
   faceTheta: Math.PI / 2,
-  eyeOffsetX: 0.175,
-  eyeRadius: 0.185,
-  pupilRadius: 0.098,
+  eyeOffsetX: 0.178,
+  eyeRadius: 0.188,
+  pupilRadius: 0.100,
 
-  armT: 0.56,
-  legT: 0.22,
+  armT: 0.55,
+  legT: 0.21,
   wobble: 1.0,
+
+  gazeRange: 0.032,     // 瞳孔最大位移（局部单位）
 };
 
 /* ------------------------------------------------------------------ */
@@ -56119,14 +56155,22 @@ function smoothstep(a, b, x) {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * 截面轮廓调制：主脊 cos(nθ) 决定 n 条纵棱，
+ * 再叠一个二倍频的小负项，让两条棱之间的面稍微内凹（真香蕉是钝棱不是圆筒）。
+ */
+function ribFactor(theta, amp, ribCount, second = 0.26) {
+  return 1 + amp * (Math.cos(ribCount * theta) - second * Math.cos(ribCount * 2 * theta));
+}
+
 function makeRadiusFn(cfg) {
   const R = cfg.bodyRadius;
   const { taperTop, taperBottom } = cfg;
   return (t) => {
     const tt = THREE.MathUtils.clamp(t, 0, 1);
     let r = 0.30 + 0.70 * Math.pow(Math.sin(Math.PI * tt), 0.62);
-    r *= 1 - taperTop * smoothstep(0.64, 1.0, tt);
-    r *= 1 - taperBottom * (1 - smoothstep(0.0, 0.30, tt));
+    r *= 1 - taperTop * smoothstep(0.62, 1.0, tt);
+    r *= 1 - taperBottom * (1 - smoothstep(0.0, 0.32, tt));
     return R * r;
   };
 }
@@ -56142,10 +56186,11 @@ function frameAt(curve, t) {
 /** 沿曲线扫掠出「变半径 + 带纵棱」的管状体 */
 function makeSweepGeometry(curve, radiusFn, opt = {}) {
   const {
-    segments = 150,
-    radialSegments = 48,
+    segments = 160,
+    radialSegments = 52,
     ribCount = 5,
-    ribAmp = 0.05,
+    ribAmp = 0.062,
+    ribSecond = 0.26,
     squashZ = 1,
   } = opt;
 
@@ -56161,7 +56206,7 @@ function makeSweepGeometry(curve, radiusFn, opt = {}) {
 
     for (let j = 0; j <= radialSegments; j++) {
       const theta = (j / radialSegments) * Math.PI * 2;
-      const r = base * (1 + ribAmp * Math.cos(ribCount * theta));
+      const r = base * ribFactor(theta, ribAmp, ribCount, ribSecond);
       const cx = Math.cos(theta) * r;
       const cy = Math.sin(theta) * r * squashZ;
       positions.push(
@@ -56222,7 +56267,7 @@ function makeSurface(cfg) {
     const tc = THREE.MathUtils.clamp(t, 0, 1);
     const P = curve.getPointAt(tc);
     const { N, B } = frameAt(curve, tc);
-    const r = radiusFn(tc) * (1 + cfg.ribAmp * Math.cos(cfg.ribCount * theta));
+    const r = radiusFn(tc) * ribFactor(theta, cfg.ribAmp, cfg.ribCount, cfg.ribSecond);
     const c = Math.cos(theta) * r;
     const s = Math.sin(theta) * r * cfg.squashZ;
     return new THREE.Vector3(
@@ -56258,9 +56303,11 @@ function createBananaMan(cfg = CONFIG) {
   const matPeel = new THREE.MeshStandardMaterial({ color: PALETTE.peel, roughness: 0.62, metalness: 0.02 });
   const matPeelDark = new THREE.MeshStandardMaterial({ color: PALETTE.peelDark, roughness: 0.66, metalness: 0.02 });
   const matTip = new THREE.MeshStandardMaterial({ color: PALETTE.tip, roughness: 0.78 });
+  const matTipDark = new THREE.MeshStandardMaterial({ color: PALETTE.tipDark, roughness: 0.82 });
   const matEye = new THREE.MeshStandardMaterial({ color: PALETTE.eyeWhite, roughness: 0.16 });
   const matPupil = new THREE.MeshStandardMaterial({ color: PALETTE.pupil, roughness: 0.10 });
   const matMouth = new THREE.MeshStandardMaterial({ color: PALETTE.mouth, roughness: 0.35 });
+  const matTongue = new THREE.MeshStandardMaterial({ color: PALETTE.tongue, roughness: 0.5 });
   const matBlush = new THREE.MeshStandardMaterial({ color: PALETTE.blush, roughness: 0.85 });
   const matGlove = new THREE.MeshStandardMaterial({ color: PALETTE.glove, roughness: 0.42 });
   const matShoe = new THREE.MeshStandardMaterial({ color: PALETTE.shoe, roughness: 0.5, metalness: 0.05 });
@@ -56271,6 +56318,7 @@ function createBananaMan(cfg = CONFIG) {
     radialSegments: cfg.radialSegs,
     ribCount: cfg.ribCount,
     ribAmp: cfg.ribAmp,
+    ribSecond: cfg.ribSecond,
     squashZ: cfg.squashZ,
   });
   const wobbleUniforms = { uTime: { value: 0 }, uWobble: { value: cfg.wobble } };
@@ -56294,30 +56342,65 @@ function createBananaMan(cfg = CONFIG) {
   body.receiveShadow = true;
   group.add(body);
 
-  /* ------- 香蕉蒂 ------- */
-  const topPoint = point(1, cfg.faceTheta);
+  /* ------- 果柄（顶部蒂）与花蒂（底部） -------
+     果柄的位置曾经是错的：锚在 t=0.985 处，而那里的果身半径只剩 0.0825，
+     比果柄底座还细，于是看起来像在尖端扣了一个悬空的盖子。
+     正确做法是从「曲线端点」出发、沿切线往回埋一段，让底座真正长进果肉里：
+     埋进去的位置果身半径约 0.117，和底座半径基本相等，接缝才是自然的。
+     另外用一个外层 pivot 承载摆动，让果柄跟着身体一起晃（原来是死的）。
+  ------------------------------------------- */
   const topTangent = curve.getTangentAt(1).normalize();
-  const tipTop = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.10, 0.24, 14), matTip);
-  tipTop.position.copy(topPoint).addScaledVector(topTangent, 0.07);
-  tipTop.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), topTangent);
-  group.add(tipTop);
+  const stemPivot = new THREE.Group();
+  stemPivot.name = 'stemPivot';
+  stemPivot.position.copy(curve.getPointAt(1));      // 曲线端点，不是靠里的采样点
 
-  const tipBottom = new THREE.Mesh(new THREE.SphereGeometry(0.088, 16, 12), matTip);
-  tipBottom.position.copy(point(0, cfg.faceTheta));
-  group.add(tipBottom);
+  // 埋深 0.18 时底座中心到最近体表点还有约 0.011 的余量（实测）：
+  // 底座整圈都在果肉内，接缝处才是「果柄从果肉里长出来」而不是「盖在上面」。
+  const STEM_BURY = 0.18;
+  const stemGroup = new THREE.Group();
+  stemGroup.name = 'stem';
+  stemGroup.position.copy(topTangent).multiplyScalar(-STEM_BURY);
+  stemGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), topTangent);
 
-  /* ------- 体表黑斑 ------- */
+  // 底座半径 0.106 < 该处果肉半径 0.120，保证底座整圈都埋在果肉里
+  const stemLow = new THREE.Mesh(new THREE.CylinderGeometry(0.070, 0.106, 0.30, 18), matTip);
+  stemLow.position.y = 0.06;
+  const stemNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.054, 0.070, 0.14, 18), matTipDark);
+  stemNeck.position.y = 0.27;
+  stemNeck.rotation.z = 0.10;
+  const stemCap = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 12), matTipDark);
+  stemCap.position.set(0.013, 0.336, 0);
+  stemCap.scale.set(1, 0.74, 1);
+  stemGroup.add(stemLow, stemNeck, stemCap);
+  stemGroup.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  stemPivot.add(stemGroup);
+  group.add(stemPivot);
+
+  const tailTangent = curve.getTangentAt(0).normalize();
+  const blossom = new THREE.Group();
+  blossom.name = 'blossom';
+  blossom.position.copy(point(0.012, cfg.faceTheta));
+  blossom.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tailTangent.clone().negate());
+  const blossomBody = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12), matTipDark);
+  blossomBody.scale.set(1, 0.85, 1);
+  const blossomTip = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.07, 12), matTipDark);
+  blossomTip.position.y = 0.10;
+  blossom.add(blossomBody, blossomTip);
+  blossom.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  group.add(blossom);
+
+  /* ------- 体表黑斑（只长在两侧与背面，避开脸和肚子） ------- */
   const spotGeo = new THREE.SphereGeometry(1, 12, 10);
   const spots = [
-    [0.34, 3.95, 0.030], [0.52, 5.25, 0.026], [0.70, 3.30, 0.028],
-    [0.26, 0.38, 0.024], [0.62, 5.90, 0.022], [0.84, 4.35, 0.024],
-    [0.16, 2.85, 0.022], [0.46, 0.05, 0.020],
+    [0.30, 3.95, 0.021], [0.50, 5.30, 0.018], [0.68, 3.28, 0.019],
+    [0.22, 0.42, 0.017], [0.60, 5.92, 0.016], [0.83, 4.40, 0.017],
+    [0.44, 0.06, 0.014], [0.74, 2.35, 0.015],
   ];
   for (const [t, theta, r] of spots) {
     const p = point(t, theta);
     const n = normal(t, theta);
     const m = new THREE.Mesh(spotGeo, matTip);
-    m.position.copy(p).addScaledVector(n, -r * 0.42);
+    m.position.copy(p).addScaledVector(n, -r * 0.45);
     m.scale.setScalar(r);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
     group.add(m);
@@ -56333,8 +56416,8 @@ function createBananaMan(cfg = CONFIG) {
     new THREE.Matrix4().makeBasis(localX, localY, localZ),
   );
 
-  const eyeGeo = new THREE.SphereGeometry(cfg.eyeRadius, 26, 20);
-  const pupilGeo = new THREE.SphereGeometry(cfg.pupilRadius, 22, 16);
+  const eyeGeo = new THREE.SphereGeometry(cfg.eyeRadius, 28, 22);
+  const pupilGeo = new THREE.SphereGeometry(cfg.pupilRadius, 24, 18);
   const glintGeo = new THREE.SphereGeometry(cfg.pupilRadius * 0.36, 12, 10);
   const faceAnchors = {};
 
@@ -56342,25 +56425,27 @@ function createBananaMan(cfg = CONFIG) {
     const eye = new THREE.Mesh(eyeGeo, matEye);
     eye.position.copy(faceCenter)
       .addScaledVector(localX, sx * cfg.eyeOffsetX)
-      .addScaledVector(localY, 0.075)
-      .addScaledVector(localZ, cfg.eyeRadius * 0.14);
-    eye.scale.set(1.02, 1.10, 0.48);
+      .addScaledVector(localY, 0.082)
+      .addScaledVector(localZ, cfg.eyeRadius * 0.16);
+    eye.scale.set(1.02, 1.10, 0.50);
     eye.quaternion.copy(faceQuat);
+    eye.castShadow = true;
     group.add(eye);
 
     const pupil = new THREE.Mesh(pupilGeo, matPupil);
     pupil.position.copy(eye.position)
-      .addScaledVector(localZ, cfg.eyeRadius * 0.46)
-      .addScaledVector(localX, sx * 0.016);
+      .addScaledVector(localZ, cfg.eyeRadius * 0.47)
+      .addScaledVector(localX, sx * 0.014);
     pupil.scale.set(1, 1.04, 0.42);
     pupil.quaternion.copy(faceQuat);
+    pupil.userData.home = pupil.position.clone();
     group.add(pupil);
 
     const glint = new THREE.Mesh(glintGeo, matEye);
     glint.position.copy(pupil.position)
-      .addScaledVector(localZ, cfg.pupilRadius * 0.38)
-      .addScaledVector(localX, -sx * 0.042)
-      .addScaledVector(localY, 0.045);
+      .addScaledVector(localZ, cfg.pupilRadius * 0.40)
+      .addScaledVector(localX, -sx * 0.040)
+      .addScaledVector(localY, 0.042);
     glint.quaternion.copy(faceQuat);
     group.add(glint);
 
@@ -56371,32 +56456,73 @@ function createBananaMan(cfg = CONFIG) {
     faceAnchors[sx < 0 ? 'eyeL' : 'eyeR'] = eye;
   }
 
+  /* ------- 笑嘴（弧线 + 舌头） ------- */
   const smilePts = [];
   for (let i = 0; i <= 26; i++) {
     const a = Math.PI * (1.14 + (0.72 * i) / 26);
-    smilePts.push(new THREE.Vector3(Math.cos(a) * 0.150, Math.sin(a) * 0.120, 0));
+    smilePts.push(new THREE.Vector3(Math.cos(a) * 0.158, Math.sin(a) * 0.126, 0));
   }
   const smile = new THREE.Mesh(
-    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(smilePts), 34, 0.030, 10, false),
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(smilePts), 36, 0.032, 12, false),
     matMouth,
   );
   smile.position.copy(faceCenter)
-    .addScaledVector(localY, -0.118)
-    .addScaledVector(localZ, 0.008);
+    .addScaledVector(localY, -0.126)
+    .addScaledVector(localZ, 0.010);
   smile.quaternion.copy(faceQuat);
   group.add(smile);
 
-  const blushGeo = new THREE.SphereGeometry(0.088, 20, 14);
+  const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.054, 20, 14), matTongue);
+  tongue.position.copy(faceCenter)
+    .addScaledVector(localY, -0.248)
+    .addScaledVector(localZ, 0.018);
+  tongue.scale.set(1.30, 0.56, 0.50);
+  tongue.quaternion.copy(faceQuat);
+  group.add(tongue);
+
+  /* ------- 腮红 ------- */
+  // 腮红：身体是弯的，两侧同一 theta 偏移的体表点并不等高。
+  //   只把 Y 拉平还不够——那样会把高的一侧压进体表里，从斜前方看会"少一块腮红"。
+  //   正确做法是：先用两侧自然高度取平均定出目标高度，再在体表上沿 t 反解出
+  //   该高度对应的点，保证每一侧都精确落在真实体表上且左右等高。
+  const BLUSH_R = 0.084;
+  const BLUSH_SX = 1.34, BLUSH_SY = 0.72, BLUSH_SZ = 0.55;
+  const blushGeo = new THREE.SphereGeometry(BLUSH_R, 20, 14);
+  const blushT0 = cfg.faceT - 0.105;
+  const blushDelta = 0.93;
+  const blushY = (
+    point(blushT0, cfg.faceTheta - blushDelta).y +
+    point(blushT0, cfg.faceTheta + blushDelta).y
+  ) * 0.5;
+
+  /** 在体表上反解出 Y ≈ yTarget 的曲线参数 t（本曲线 Y 随 t 单调递增） */
+  function surfaceTAtY(theta, yTarget) {
+    let lo = 0.02, hi = 0.98;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) * 0.5;
+      if (point(mid, theta).y < yTarget) lo = mid; else hi = mid;
+    }
+    return (lo + hi) * 0.5;
+  }
+
   for (const sx of [-1, 1]) {
-    const bt = cfg.faceT - 0.035;
-    const bth = cfg.faceTheta + sx * 0.84;
+    const bth = cfg.faceTheta + sx * blushDelta;
+    const bt = surfaceTAtY(bth, blushY);
     const p = point(bt, bth);
     const n = normal(bt, bth);
     const b = new THREE.Mesh(blushGeo, matBlush);
-    // 埋在体表下一点，只露出一层薄薄的红晕，避免出现"贴片"边缘
-    b.position.copy(p).addScaledVector(n, -0.076);
-    b.scale.set(1.30, 0.62, 0.30);
+    // 关键：沿法线的"半厚"必须真的越过体表，否则可不可见完全取决于体表曲率，
+    // 换一个角度就会出现"少了一块腮红"。这里固定埋一半、露一半。
+    const halfThickness = BLUSH_R * BLUSH_SZ;
+    b.position.copy(p).addScaledVector(n, -halfThickness * 0.52);
+    b.scale.set(BLUSH_SX, BLUSH_SY, BLUSH_SZ);
     b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    b.userData.kind = 'blush';
+    b.userData.side = sx;
+    b.userData.normal = n.clone();
+    b.userData.surfacePoint = p.clone();
+    b.userData.radius = BLUSH_R;
+    b.userData.protrusion = halfThickness * 0.48;   // 露出体表的厚度（自检用）
     group.add(b);
   }
 
@@ -56408,25 +56534,25 @@ function createBananaMan(cfg = CONFIG) {
     const armL = point(cfg.armT, cfg.faceTheta - 1.02);
     const armR = point(cfg.armT, cfg.faceTheta + 1.02);
     const armY = (armL.y + armR.y) * 0.5;
-    const ap = point(cfg.armT, armTh).addScaledVector(normal(cfg.armT, armTh), -0.045);
+    const ap = point(cfg.armT, armTh).addScaledVector(normal(cfg.armT, armTh), -0.050);
     pivot.position.set(ap.x, armY, ap.z);
     pivot.userData.side = sx;
 
-    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.062, 0.30, 8, 16), matPeelDark);
-    upper.position.set(sx * 0.055, -0.19, 0);
-    upper.rotation.z = sx * 0.16;
+    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.060, 0.32, 8, 18), matPeelDark);
+    upper.position.set(sx * 0.052, -0.20, 0);
+    upper.rotation.z = sx * 0.15;
     upper.castShadow = true;
     pivot.add(upper);
 
-    const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.26, 8, 16), matPeelDark);
-    fore.position.set(sx * 0.135, -0.50, 0.02);
-    fore.rotation.z = sx * 0.10;
+    const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.053, 0.27, 8, 18), matPeelDark);
+    fore.position.set(sx * 0.128, -0.52, 0.02);
+    fore.rotation.z = sx * 0.09;
     fore.castShadow = true;
     pivot.add(fore);
 
-    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.098, 18, 14), matGlove);
-    glove.position.set(sx * 0.165, -0.68, 0.03);
-    glove.scale.set(1, 1.05, 0.95);
+    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.100, 20, 16), matGlove);
+    glove.position.set(sx * 0.158, -0.705, 0.028);
+    glove.scale.set(1, 1.06, 0.94);
     glove.castShadow = true;
     pivot.add(glove);
 
@@ -56445,20 +56571,21 @@ function createBananaMan(cfg = CONFIG) {
     pivot.position.set(anchor.x, legY - 0.02, anchor.z);
     pivot.userData.side = sx;
 
-    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.072, 0.24, 8, 16), matPeelDark);
-    thigh.position.set(sx * 0.080, -0.17, 0);
-    thigh.rotation.z = sx * 0.08;
+    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.070, 0.25, 8, 18), matPeelDark);
+    thigh.position.set(sx * 0.078, -0.175, 0);
+    thigh.rotation.z = sx * 0.07;
     thigh.castShadow = true;
     pivot.add(thigh);
 
-    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.063, 0.22, 8, 16), matPeelDark);
-    shin.position.set(sx * 0.090, -0.44, 0);
+    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.061, 0.23, 8, 18), matPeelDark);
+    shin.position.set(sx * 0.088, -0.45, 0);
     shin.castShadow = true;
     pivot.add(shin);
 
-    const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), matShoe);
-    shoe.position.set(sx * 0.088, -0.63, 0.085);
-    shoe.scale.set(0.94, 0.60, 1.48);
+    const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.102, 20, 16), matShoe);
+    shoe.position.set(sx * 0.086, -0.645, 0.078);
+    shoe.scale.set(0.92, 0.60, 1.42);
+    shoe.rotation.y = sx * 0.06;
     shoe.castShadow = true;
     pivot.add(shoe);
 
@@ -56466,8 +56593,44 @@ function createBananaMan(cfg = CONFIG) {
     legs[sx < 0 ? 'legL' : 'legR'] = pivot;
   }
 
+  /* ------- 眼神：瞳孔朝向（可由外部驱动，实现"看镜头"） ------- */
+  const gaze = { target: new THREE.Vector2(0, 0), cur: new THREE.Vector2(0, 0) };
+
+  /** dx / dy ∈ [-1,1]：1 = 看向角色自身的 +X / +Y 方向 */
+  function setGaze(dx, dy) {
+    gaze.target.set(
+      THREE.MathUtils.clamp(dx, -1, 1),
+      THREE.MathUtils.clamp(dy, -1, 1),
+    );
+  }
+
+  function applyGaze(rate = 0.16) {
+    gaze.cur.lerp(gaze.target, rate);
+    const px = gaze.cur.x * cfg.gazeRange;
+    const py = gaze.cur.y * cfg.gazeRange * 0.85;
+    for (const k of ['eyeL', 'eyeR']) {
+      const eye = faceAnchors[k];
+      const pupil = eye.userData.pupil;
+      const glint = eye.userData.glint;
+      const home = pupil.userData.home;
+      pupil.position.copy(home)
+        .addScaledVector(eye.userData.localX, px)
+        .addScaledVector(eye.userData.localY, py);
+      glint.position.copy(home)
+        .addScaledVector(eye.userData.localZ || localZ, cfg.pupilRadius * 0.40)
+        .addScaledVector(eye.userData.localX, px + eye.userData.side * -0.040)
+        .addScaledVector(eye.userData.localY, py + 0.042);
+    }
+  }
+
+  // 记录左右眼各在 -X / +X 一侧，供高光偏移使用
+  faceAnchors.eyeL.userData.side = -1;
+  faceAnchors.eyeR.userData.side = 1;
+  faceAnchors.eyeL.userData.localZ = localZ.clone();
+  faceAnchors.eyeR.userData.localZ = localZ.clone();
+
   /* ------- 动画 ------- */
-  function update(time, wobbleGain = 0) {
+  function update(time, wobbleGain = 0, dt = 1 / 60) {
     wobbleUniforms.uTime.value = time;
     wobbleUniforms.uWobble.value = cfg.wobble + wobbleGain;
     for (const k of ['armL', 'armR']) {
@@ -56483,12 +56646,36 @@ function createBananaMan(cfg = CONFIG) {
     }
     const s = 1 + Math.sin(time * 2.0) * 0.04;
     smile.scale.set(s, s, 1);
+
+    // 果柄摆动：相位与顶点着色器里身体顶端（h = 1）的位移保持一致，
+    // 位移量 0.10 / 0.055 换算成绕轴旋转约 0.048 / 0.030 弧度。
+    // 忽略 uWobble 会让"被点一下"时果柄掉队，所以乘上同一个增益。
+    const wob = cfg.wobble + wobbleGain;
+    stemPivot.rotation.z = -Math.sin(time * 1.7 + 3.1) * 0.062 * wob;
+    stemPivot.rotation.x = Math.cos(time * 1.3 + 1.7 + 2.3) * 0.040 * wob;
+
+    applyGaze(Math.min(1, dt * 9));
   }
 
   return {
     group,
-    parts: { body, tipTop, tipBottom, smile, arms, legs, faceAnchors },
+    parts: {
+      body,
+      tipTop: stemLow,
+      tipBottom: blossomBody,
+      stemPivot,
+      stemGroup,
+      stemLow,
+      stemNeck,
+      blossom,
+      smile,
+      tongue,
+      arms,
+      legs,
+      faceAnchors,
+    },
     update,
+    setGaze,
     surface: S,
   };
 }
@@ -56500,16 +56687,19 @@ __BM.makeSurface = makeSurface;
 __BM.createBananaMan = createBananaMan;
 }
 
-/* ============ 4/5  抽象背景场景 ============ */
+/* ============ 4/6  抽象背景场景 ============ */
 { 'use strict';
 /**
  * scene.js —— 抽象背景 / 灯光 / 环境
  *
- * 全部程序化生成，无任何外部贴图：
- *   · 极光渐变天穹：一个大球体（BackSide）+ 自定义 shader，靠 fbm 噪声流动
- *   · 环绕漂浮的霓虹线框体：抽象几何体缓慢自转 + 上下浮动
- *   · 反射地面：网格线 + 地面柔光
- *   · 光斑：用 canvas 现场生成的径向渐变贴图做 Sprite，营造体积光
+ * 全部程序化生成，无任何外部贴图。这一版刻意把"正常感"去掉：
+ *   · 极光天穹：大球体（BackSide）+ 自定义 shader，fbm 噪声流动
+ *   · 扭曲色场地面：一块大平面，用 fbm 驱动的环流色带向外溶解于虚空
+ *     （原来是「圆形地板 + GridHelper 网格」，那种规整网格正是"太正常"的来源）
+ *   · 流体金属泡：高金属度、低粗糙度的异形几何体，靠环境贴图反射出流动高光
+ *   · 碎片星域：上千个点粒子缓慢漂移
+ *   · 断裂巨环：几个大圆环以怪角度倾斜穿插
+ *   · 光斑：canvas 现场生成的径向渐变贴图做 Sprite，营造体积光
  */
 
 const THREE = __BM.THREE;
@@ -56534,6 +56724,47 @@ function makeGlowTexture(inner = 'rgba(255,255,255,1)', outer = 'rgba(255,255,25
 }
 
 /* ------------------------------------------------------------------ */
+/* 共用 GLSL 片段：自包含的线性 -> sRGB 转换                            */
+/*   不依赖 three 动态注入的 linearToOutputTexel，语法自检也能独立解析     */
+/* ------------------------------------------------------------------ */
+const GLSL_SRGB = /* glsl */`
+vec3 bmToSRGB(vec3 c) {
+  return mix(
+    c * 12.92,
+    1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055,
+    step(vec3(0.0031308), c)
+  );
+}
+
+// 经典 3D 值噪声 + fbm
+float bmHash(vec3 p) {
+  p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+  p *= 17.0;
+  return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+float bmNoise(vec3 x) {
+  vec3 i = floor(x);
+  vec3 f = fract(x);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(mix(bmHash(i + vec3(0,0,0)), bmHash(i + vec3(1,0,0)), f.x),
+        mix(bmHash(i + vec3(0,1,0)), bmHash(i + vec3(1,1,0)), f.x), f.y),
+    mix(mix(bmHash(i + vec3(0,0,1)), bmHash(i + vec3(1,0,1)), f.x),
+        mix(bmHash(i + vec3(0,1,1)), bmHash(i + vec3(1,1,1)), f.x), f.y),
+    f.z);
+}
+float bmFbm(vec3 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) {
+    v += a * bmNoise(p);
+    p *= 2.03;
+    a *= 0.5;
+  }
+  return v;
+}
+`;
+
+/* ------------------------------------------------------------------ */
 /* 天穹：流动的极光渐变                                                 */
 /* ------------------------------------------------------------------ */
 const SKY_VERT = /* glsl */`
@@ -56552,43 +56783,7 @@ const SKY_FRAG = /* glsl */`
   uniform vec3  uColorC;   // 地平线亮色
   uniform vec3  uColorD;   // 极光点缀
   varying vec3  vWorldPos;
-
-  // 自包含的线性 -> sRGB 转换，避免依赖 three 动态注入的 linearToOutputTexel
-  vec3 bmToSRGB(vec3 c) {
-    return mix(
-      c * 12.92,
-      1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055,
-      step(vec3(0.0031308), c)
-    );
-  }
-
-  // 经典 3D 值噪声 + fbm
-  float hash(vec3 p) {
-    p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
-    p *= 17.0;
-    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
-  }
-  float noise(vec3 x) {
-    vec3 i = floor(x);
-    vec3 f = fract(x);
-    f = f * f * (3.0 - 2.0 * f);
-    return mix(
-      mix(mix(hash(i + vec3(0,0,0)), hash(i + vec3(1,0,0)), f.x),
-          mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-      mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-          mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
-      f.z);
-  }
-  float fbm(vec3 p) {
-    float v = 0.0, a = 0.5;
-    for (int i = 0; i < 4; i++) {
-      v += a * noise(p);
-      p *= 2.03;
-      a *= 0.5;
-    }
-    return v;
-  }
-
+${GLSL_SRGB}
   void main() {
     vec3 dir = normalize(vWorldPos);
     float h = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
@@ -56600,10 +56795,15 @@ const SKY_FRAG = /* glsl */`
     // 极光带：沿方位角流动的 fbm
     float az = atan(dir.z, dir.x);
     vec3 q = vec3(cos(az) * 2.2, dir.y * 2.6, sin(az) * 2.2);
-    float band = fbm(q + vec3(0.0, uTime * 0.045, uTime * 0.03));
+    float band = bmFbm(q + vec3(0.0, uTime * 0.045, uTime * 0.03));
     band = smoothstep(0.42, 0.92, band);
     float horizon = smoothstep(0.18, 0.55, h) * (1.0 - smoothstep(0.62, 1.0, h));
     col = mix(col, uColorD, band * horizon * 0.62);
+
+    // 第二层：更慢、更大尺度的色团，制造"不对劲"的抽象流动
+    float warp = bmFbm(vec3(dir.x * 1.1, dir.y * 1.4 + uTime * 0.02, dir.z * 1.1));
+    col = mix(col, uColorD, smoothstep(0.55, 1.0, warp) * 0.22);
+    col = mix(col, uColorB, smoothstep(0.10, 0.0, abs(warp - 0.45)) * 0.18);
 
     // 地平线附近的柔光
     col += uColorC * pow(1.0 - smoothstep(0.0, 0.30, h), 3.0) * 0.32;
@@ -56613,6 +56813,56 @@ const SKY_FRAG = /* glsl */`
     col *= 1.0 - vig * 0.16;
 
     gl_FragColor = vec4(bmToSRGB(col), 1.0);
+  }
+`;
+
+/* ------------------------------------------------------------------ */
+/* 地面：扭曲色场（向外溶解于虚空，不再是一块规整的圆盘）                 */
+/* ------------------------------------------------------------------ */
+const FLOOR_VERT = /* glsl */`
+  varying vec2 vUv;
+  varying vec3 vWorldPos;
+  void main() {
+    vUv = uv;
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vWorldPos = wp.xyz;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`;
+
+const FLOOR_FRAG = /* glsl */`
+  uniform float uTime;
+  uniform vec3  uColorA;   // 中心色
+  uniform vec3  uColorB;   // 外圈色
+  uniform vec3  uColorC;   // 纹路高光色
+  uniform float uOpacity;
+  varying vec2  vUv;
+  varying vec3  vWorldPos;
+${GLSL_SRGB}
+  void main() {
+    vec2 p = vUv * 2.0 - 1.0;
+    float r = length(p);
+    float a = atan(p.y, p.x);
+
+    // 被 fbm 扭曲的环流：把半径和角度都搅乱，看起来像流动的等离子体
+    float w = bmFbm(vec3(p * 2.6, uTime * 0.05));
+    float w2 = bmFbm(vec3(p * 5.2 + 13.0, uTime * 0.08));
+    float rr = r + (w - 0.5) * 0.30;
+    float rings = sin(rr * 13.0 - uTime * 0.85 + w2 * 5.0) * 0.5 + 0.5;
+    rings = pow(rings, 2.6);
+
+    // 旋涡条纹
+    float swirl = sin(a * 6.0 + r * 9.0 - uTime * 0.55 + w * 4.0) * 0.5 + 0.5;
+    swirl = pow(swirl, 3.0);
+
+    vec3 col = mix(uColorA, uColorB, smoothstep(0.0, 1.0, r));
+    col = mix(col, uColorC, rings * 0.55);
+    col = mix(col, uColorC, swirl * 0.30 * (1.0 - smoothstep(0.1, 0.9, r)));
+    col += uColorC * pow(1.0 - clamp(r, 0.0, 1.0), 3.0) * 0.45;
+
+    // 向外淡出：地面没有边界，直接溶进背景
+    float alpha = uOpacity * (1.0 - smoothstep(0.30, 0.98, r));
+    gl_FragColor = vec4(bmToSRGB(col), alpha);
   }
 `;
 
@@ -56673,16 +56923,19 @@ function createScene(renderer) {
       skyA: 0x120a2a, skyB: 0x5b2b8f, skyC: 0x1d3f8f, skyD: 0x00e7d0,
       fog: 0x150f2e, grid: 0x8f5cff, ground: 0x1a1236,
       key: 0xfff2b0, fill: 0x7f5cff, rimc: 0x24f0d8,
+      floorA: 0x2a1c5e, floorB: 0x0d0722, floorC: 0x24f0d8,
     },
     sunset: {
       skyA: 0x1a0a1f, skyB: 0x9c2f6b, skyC: 0x3a1b6b, skyD: 0xffb03a,
       fog: 0x2a1030, grid: 0xff7ad0, ground: 0x2a1230,
       key: 0xffe0a0, fill: 0xff5fa8, rimc: 0xffc46b,
+      floorA: 0x5e1c44, floorB: 0x1e0722, floorC: 0xffa83a,
     },
     deepsea: {
       skyA: 0x03122a, skyB: 0x0d5f7a, skyC: 0x062a52, skyD: 0x5ff2ff,
       fog: 0x06182e, grid: 0x35d7ff, ground: 0x08203a,
       key: 0xd8fbff, fill: 0x2fa9ff, rimc: 0x6bffe8,
+      floorA: 0x0a3a63, floorB: 0x03101f, floorC: 0x6bffe8,
     },
   };
   let themeName = 'aurora';
@@ -56746,68 +56999,38 @@ function createScene(renderer) {
   rim.position.set(3.0, 1.2, -4.4);
   scene.add(rim);
 
-  /* ---------- 地面：反射网格 ---------- */
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: theme.ground,
-    roughness: 0.42,
-    metalness: 0.48,
-    envMapIntensity: 0.9,
-  });
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 72), groundMat);
+  /* ---------- 地面：扭曲色场 ---------- */
+  const floorUniforms = {
+    uTime: { value: 0 },
+    uColorA: { value: new THREE.Color(theme.floorA) },
+    uColorB: { value: new THREE.Color(theme.floorB) },
+    uColorC: { value: new THREE.Color(theme.floorC) },
+    uOpacity: { value: 0.95 },
+  };
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(56, 56, 1, 1),
+    new THREE.ShaderMaterial({
+      uniforms: floorUniforms,
+      vertexShader: FLOOR_VERT,
+      fragmentShader: FLOOR_FRAG,
+      transparent: true,
+      depthWrite: false,
+      fog: false,
+      side: THREE.DoubleSide,
+    }),
+  );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.085;
-  ground.receiveShadow = true;
   ground.name = 'ground';
+  ground.receiveShadow = false;
   scene.add(ground);
 
-  const grid = new THREE.GridHelper(46, 46, theme.grid, theme.rimc);
-  grid.material.transparent = true;
-  grid.material.opacity = 0.20;
-  grid.position.y = -0.075;
-  grid.name = 'grid';
-  scene.add(grid);
-
-  /* ---------- 网格换色工具 ----------
-     GridHelper 的材质开了 vertexColors，改 material.color 没有任何效果，
-     必须直接改写 geometry 的 color 属性。它的顶点排布是：
-     每一段（i = 0..divisions）占 4 个顶点（两条线各 2 个），中心段用 color1。
-  ------------------------------------- */
-  const GRID_DIVISIONS = 46;
-  function recolorGrid(centerColor, lineColor) {
-    const attr = grid.geometry.getAttribute('color');
-    if (!attr) return;
-    const c1 = new THREE.Color(centerColor);
-    const c2 = new THREE.Color(lineColor);
-    const center = GRID_DIVISIONS / 2;
-    for (let i = 0; i <= GRID_DIVISIONS; i++) {
-      const c = i === center ? c1 : c2;
-      for (let v = 0; v < 4; v++) {
-        const idx = i * 4 + v;
-        if (idx >= attr.count) break;
-        attr.setXYZ(idx, c.r, c.g, c.b);
-      }
-    }
-    attr.needsUpdate = true;
-  }
-
-
-  /* ---------- 环绕抽象的漂浮体 ---------- */
+  /* ---------- 流体金属泡：抽象的主角背景 ---------- */
   const floatGroup = new THREE.Group();
   floatGroup.name = 'floaters';
   scene.add(floatGroup);
 
   const floaters = [];
-  const flutterGeo = [
-    new THREE.IcosahedronGeometry(0.30, 0),
-    new THREE.TorusGeometry(0.30, 0.085, 10, 26),
-    new THREE.OctahedronGeometry(0.34, 0),
-    new THREE.TorusKnotGeometry(0.24, 0.06, 72, 10, 2, 3),
-    new THREE.BoxGeometry(0.36, 0.36, 0.36),
-    new THREE.TetrahedronGeometry(0.36, 0),
-    new THREE.DodecahedronGeometry(0.30, 0),
-    new THREE.ConeGeometry(0.26, 0.44, 6),
-  ];
-  const floatColors = [theme.grid, 0xff5fa8, 0x24f0d8, 0xffd93b, 0x8f5cff, 0x7fffb0];
 
   const rnd = (() => {
     let s = 20261006;
@@ -56817,42 +57040,153 @@ function createScene(renderer) {
     };
   })();
 
-  for (let i = 0; i < 26; i++) {
-    const geo = flutterGeo[i % flutterGeo.length];
-    const wire = i % 3 !== 0;   // 三分之二线框、三分之一实心发光
-    const color = floatColors[i % floatColors.length];
-    const mat = wire
-      ? new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.42, fog: true })
-      : new THREE.MeshStandardMaterial({
-        color, roughness: 0.3, metalness: 0.1,
-        emissive: new THREE.Color(color).multiplyScalar(0.55),
-      });
+  // 金属泡用的几何：全是「非日常」的形状
+  const blobGeo = [
+    new THREE.TorusKnotGeometry(0.62, 0.20, 128, 20, 2, 3),
+    new THREE.TorusKnotGeometry(0.55, 0.17, 96, 16, 3, 5),
+    new THREE.IcosahedronGeometry(0.78, 1),
+    new THREE.TorusGeometry(0.70, 0.24, 20, 64),
+    new THREE.DodecahedronGeometry(0.72, 0),
+    new THREE.OctahedronGeometry(0.80, 1),
+  ];
 
-    const m = new THREE.Mesh(geo, mat);
-    const radius = 3.4 + rnd() * 5.0;
-    const angle = rnd() * Math.PI * 2;
-    const height = -0.5 + rnd() * 5.4;
+  for (let i = 0; i < blobGeo.length; i++) {
+    const m = new THREE.Mesh(blobGeo[i], new THREE.MeshStandardMaterial({
+      color: new THREE.Color(i % 2 ? theme.grid : theme.rimc).offsetHSL(0, 0, 0.06),
+      metalness: 0.96,
+      roughness: 0.14,
+      envMapIntensity: 1.7,
+      emissive: new THREE.Color(i % 2 ? theme.fill : theme.rimc).multiplyScalar(0.16),
+      flatShading: i % 3 === 1,
+    }));
+    const radius = 5.0 + rnd() * 4.6;
+    const angle = (i / blobGeo.length) * Math.PI * 2 + rnd() * 0.6;
+    const height = -0.6 + rnd() * 6.2;
     m.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
-    const s = 0.55 + rnd() * 1.05;
-    m.scale.setScalar(s);
+    m.scale.setScalar(0.85 + rnd() * 0.9);
     m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
     floatGroup.add(m);
     floaters.push({
-      mesh: m,
-      spin: new THREE.Vector3((rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.5),
-      bobAmp: 0.16 + rnd() * 0.42,
+      mesh: m, kind: 'blob',
+      spin: new THREE.Vector3((rnd() - 0.5) * 0.34, (rnd() - 0.5) * 0.34, (rnd() - 0.5) * 0.34),
+      bobAmp: 0.28 + rnd() * 0.5,
+      bobSpeed: 0.22 + rnd() * 0.4,
+      phase: rnd() * Math.PI * 2,
+      baseY: height,
+      pulse: 0.9 + rnd() * 0.5,
+      baseScale: m.scale.x,
+    });
+  }
+
+  // 飞散的碎片：细线框，随机翻滚
+  const shardGeo = [
+    new THREE.TetrahedronGeometry(0.46, 0),
+    new THREE.OctahedronGeometry(0.40, 0),
+    new THREE.BoxGeometry(0.44, 0.44, 0.44),
+    new THREE.ConeGeometry(0.34, 0.62, 5),
+    new THREE.IcosahedronGeometry(0.38, 0),
+  ];
+  const shardColors = [theme.grid, 0xff5fa8, 0x24f0d8, 0xffd93b, 0x8f5cff, 0x7fffb0];
+  for (let i = 0; i < 26; i++) {
+    const color = shardColors[i % shardColors.length];
+    const m = new THREE.Mesh(
+      shardGeo[i % shardGeo.length],
+      new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.40 }),
+    );
+    const radius = 3.2 + rnd() * 6.2;
+    const angle = rnd() * Math.PI * 2;
+    const height = -0.7 + rnd() * 6.4;
+    m.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+    m.scale.setScalar(0.5 + rnd() * 1.1);
+    m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+    floatGroup.add(m);
+    floaters.push({
+      mesh: m, kind: 'shard',
+      spin: new THREE.Vector3((rnd() - 0.5) * 0.6, (rnd() - 0.5) * 0.6, (rnd() - 0.5) * 0.6),
+      bobAmp: 0.2 + rnd() * 0.5,
       bobSpeed: 0.35 + rnd() * 0.6,
       phase: rnd() * Math.PI * 2,
       baseY: height,
+      pulse: 1,
+      baseScale: m.scale.x,
     });
   }
+
+  /* ---------- 断裂巨环：远处侧后方的抽象弧线 ----------
+     注意：巨环绝对不能围绕角色放置。环绕式的大环从任何角度看都会有一部分
+     横穿角色身前，把主体挡得七零八落（第一版就是这样，构图检查图里一眼可见）。
+     所以这里把每个环保留在「远离原点、且偏向角色身后」的位置，只当背景弧线用。
+  ------------------------------------------------------- */
+  const ringGroup = new THREE.Group();
+  ringGroup.name = 'rings';
+  scene.add(ringGroup);
+  const rings = [];
+  const RING_DEFS = [
+    // [位置 x, y, z], 半径, 倾角 [x, y, z], 透明度
+    [[-7.2, 4.6, -5.2], 3.4, [1.15, 0.42, 0.25], 0.26],
+    [[7.4, 2.2, -6.4], 4.2, [1.42, -0.55, -0.18], 0.20],
+    [[0.6, 7.4, -9.4], 5.2, [1.75, 0.20, 0.55], 0.15],
+  ];
+  RING_DEFS.forEach(([pos, radius, rot, opacity], i) => {
+    const r = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.030 - i * 0.004, 8, 150),
+      new THREE.MeshBasicMaterial({
+        color: i % 2 ? theme.rimc : theme.grid,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+      }),
+    );
+    r.position.set(...pos);
+    r.rotation.set(...rot);
+    ringGroup.add(r);
+    rings.push({ mesh: r, speed: (0.05 + rnd() * 0.09) * (i % 2 ? -1 : 1) });
+  });
+
+  /* ---------- 碎片星域：上千个点缓慢漂移 ---------- */
+  const STAR_COUNT = 1400;
+  const starPos = new Float32Array(STAR_COUNT * 3);
+  const starCol = new Float32Array(STAR_COUNT * 3);
+  const starBase = new Float32Array(STAR_COUNT * 3);
+  const tmpColor = new THREE.Color();
+  for (let i = 0; i < STAR_COUNT; i++) {
+    const radius = 4.5 + rnd() * 16;
+    const angle = rnd() * Math.PI * 2;
+    const height = -2.5 + rnd() * 13;
+    starBase[i * 3] = Math.cos(angle) * radius;
+    starBase[i * 3 + 1] = height;
+    starBase[i * 3 + 2] = Math.sin(angle) * radius;
+    starPos[i * 3] = starBase[i * 3];
+    starPos[i * 3 + 1] = starBase[i * 3 + 1];
+    starPos[i * 3 + 2] = starBase[i * 3 + 2];
+    tmpColor.setHex(shardColors[i % shardColors.length]);
+    starCol[i * 3] = tmpColor.r;
+    starCol[i * 3 + 1] = tmpColor.g;
+    starCol[i * 3 + 2] = tmpColor.b;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+    size: 0.13,
+    map: makeGlowTexture('rgba(255,255,255,0.95)'),
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  }));
+  stars.name = 'starfield';
+  scene.add(stars);
 
   /* ---------- 体积光斑 ---------- */
   const glows = [];
   const glowDefs = [
-    [theme.rimc, 7.5, [5.6, 3.4, -4.6]],
-    [theme.fill, 6.4, [-5.8, 2.2, -3.0]],
-    [theme.grid, 5.6, [1.2, 5.4, -6.2]],
+    [theme.rimc, 9.5, [5.6, 3.4, -4.6]],
+    [theme.fill, 8.4, [-5.8, 2.2, -3.0]],
+    [theme.grid, 7.6, [1.2, 5.4, -6.2]],
+    [theme.skyD, 6.2, [-2.4, 4.6, 5.4]],
   ];
   for (const [color, size, pos] of glowDefs) {
     const c = new THREE.Color(color);
@@ -56869,37 +57203,42 @@ function createScene(renderer) {
     glows.push({ sp, base: size, phase: glows.length * 1.7 });
   }
 
-  /* ---------- 地面光晕 ---------- */
-  const floorGlow = new THREE.Mesh(
-    new THREE.PlaneGeometry(24, 24),
-    new THREE.MeshBasicMaterial({
-      map: makeGlowTexture('rgba(255,255,255,0.55)'),
-      transparent: true,
-      opacity: 0.30,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  );
-  floorGlow.rotation.x = -Math.PI / 2;
-  floorGlow.position.y = -0.062;
-  scene.add(floorGlow);
-
   /* ---------- 更新 ---------- */
   function update(dt, elapsed) {
     skyUniforms.uTime.value = elapsed;
     sky.position.copy(camera.position);   // 天穹永远跟着相机
+    floorUniforms.uTime.value = elapsed;
 
     for (const f of floaters) {
       f.mesh.rotation.x += f.spin.x * dt;
       f.mesh.rotation.y += f.spin.y * dt;
       f.mesh.rotation.z += f.spin.z * dt;
       f.mesh.position.y = f.baseY + Math.sin(elapsed * f.bobSpeed + f.phase) * f.bobAmp;
+      if (f.kind === 'blob') {
+        // 缓慢的呼吸形变：金属泡像活的一样胀缩
+        const k = 1 + Math.sin(elapsed * 0.5 * f.pulse + f.phase) * 0.10;
+        f.mesh.scale.setScalar(f.baseScale * k);
+      }
     }
+
+    for (const r of rings) {
+      r.mesh.rotation.z += r.speed * dt;
+      r.mesh.rotation.x += r.speed * 0.4 * dt;
+    }
+
+    // 星域：整体极慢自转 + 每个点轻微的上下漂移（只改 position，避免重建）
+    stars.rotation.y += dt * 0.012;
+    const pos = starGeo.attributes.position;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      pos.array[i * 3 + 1] = starBase[i * 3 + 1] +
+        Math.sin(elapsed * 0.35 + i * 0.7) * 0.22;
+    }
+    pos.needsUpdate = true;
+
     for (const g of glows) {
-      const k = 1 + Math.sin(elapsed * 0.6 + g.phase) * 0.14;
+      const k = 1 + Math.sin(elapsed * 0.6 + g.phase) * 0.16;
       g.sp.scale.set(g.base * k, g.base * k, 1);
     }
-    floorGlow.material.opacity = 0.26 + Math.sin(elapsed * 0.9) * 0.05;
   }
 
   /* ---------- 相机（供 sky 跟随使用） ---------- */
@@ -56914,26 +57253,32 @@ function createScene(renderer) {
     skyUniforms.uColorB.value.setHex(theme.skyB);
     skyUniforms.uColorC.value.setHex(theme.skyC);
     skyUniforms.uColorD.value.setHex(theme.skyD);
+    floorUniforms.uColorA.value.setHex(theme.floorA);
+    floorUniforms.uColorB.value.setHex(theme.floorB);
+    floorUniforms.uColorC.value.setHex(theme.floorC);
     scene.fog.color.setHex(theme.fog);
-    groundMat.color.setHex(theme.ground);
-    recolorGrid(theme.grid, theme.rimc);
     key.color.setHex(theme.key);
     fill.color.setHex(theme.fill);
     rim.color.setHex(theme.rimc);
     glows[0].sp.material.color.setHex(theme.rimc);
     glows[1].sp.material.color.setHex(theme.fill);
     glows[2].sp.material.color.setHex(theme.grid);
+    if (glows[3]) glows[3].sp.material.color.setHex(theme.skyD);
 
-    // 漂浮体：线框体换成主题网格色，实心体换成主题点缀色
+    // 金属泡：一半跟主题网格色、一半跟点缀色
     floaters.forEach((f, i) => {
       const m = f.mesh.material;
       if (m.wireframe) {
         m.color.setHex(i % 2 ? theme.grid : theme.rimc);
       } else {
         const c = new THREE.Color(i % 2 ? theme.fill : theme.skyD);
-        m.color.copy(c);
-        m.emissive.copy(c).multiplyScalar(0.55);
+        m.color.copy(c).offsetHSL(0, 0, 0.06);
+        m.emissive.copy(c).multiplyScalar(0.16);
       }
+    });
+
+    rings.forEach((r, i) => {
+      r.mesh.material.color.setHex(i % 2 ? theme.rimc : theme.grid);
     });
 
     // 环境贴图随主题重建（旧的及时释放，避免显存泄漏）
@@ -56951,11 +57296,12 @@ function createScene(renderer) {
   }
 
   return {
-    scene, camera, sky, ground, grid, floatGroup,
+    scene, camera, sky, ground, floatGroup, ringGroup, stars,
     update, setTheme, nextTheme,
     get themeName() { return themeName; },
     lights: { hemi, key, fill, rim },
     fog: scene.fog,
+    floorUniforms,
   };
 }
 
@@ -56963,7 +57309,190 @@ __BM.makeGlowTexture = makeGlowTexture;
 __BM.createScene = createScene;
 }
 
-/* ============ 5/5  启动、交互与兜底 ============ */
+/* ============ 5/6  名字铭牌 ============ */
+{ 'use strict';
+/**
+ * plate.js —— 悬浮名字铭牌（纯 Canvas 程序化生成，零外部素材）
+ *
+ * 这块牌子挂在角色头顶，跟着角色一起转，正面刻着主角的名字。
+ * 贴图用 canvas 现场画，部署时不需要任何图片文件，也不会发起网络请求。
+ * 文本绘制在少数无文本能力的宿主里会失败，这里全程做能力探测与 try/catch，
+ * 保证「画不出来」最多是没字，绝不让整个页面挂掉。
+ */
+
+const THREE = __BM.THREE;
+
+const OWNER = {
+  name: '焦易轩',
+  latin: 'JIAO YI XUAN',
+};
+
+// 铭牌的几何尺寸只有这一处定义，main.js 与自检脚本都用它，避免两边各写一份
+const PLATE = {
+  width: 1.16,     // 世界单位；2:1 比例，所以高 = width / 2
+  gap: 0.46,       // 牌底与角色最高点之间的空隙
+};
+
+const FONT_STACK = '"PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif';
+
+function roundRect(ctx, x, y, w, h, r) {
+  if (typeof ctx.roundRect === 'function') {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + w - rr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+  ctx.lineTo(x + w, y + h - rr);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  ctx.lineTo(x + rr, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+  ctx.lineTo(x, y + rr);
+  ctx.quadraticCurveTo(x, y, x + rr, y);
+  ctx.closePath();
+}
+
+/**
+ * 画铭牌贴图。返回 canvas（供测试断言/调试），绘制失败时也返回 canvas，
+ * 只是内容可能只有背板。
+ * @param {{name?:string, latin?:string, width?:number, height?:number}} opts
+ */
+function drawPlateCanvas(opts = {}) {
+  const {
+    name = OWNER.name,
+    latin = OWNER.latin,
+    width = 1024,
+    height = 512,
+  } = opts;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  try {
+    const W = width;
+    const H = height;
+    ctx.clearRect(0, 0, W, H);
+
+    // 背板：深紫半透明 + 金色描边
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, 'rgba(34, 24, 62, 0.94)');
+    g.addColorStop(1, 'rgba(16, 12, 34, 0.94)');
+    roundRect(ctx, 10, 10, W - 20, H - 20, 54);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = 'rgba(255, 217, 59, 0.92)';
+    ctx.stroke();
+
+    // 内侧细线
+    roundRect(ctx, 34, 34, W - 68, H - 68, 38);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(36, 240, 216, 0.45)';
+    ctx.stroke();
+
+    if (typeof ctx.fillText !== 'function') return canvas;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+
+    // 主名
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = '#ffd93b';
+    ctx.font = `900 208px ${FONT_STACK}`;
+    ctx.fillText(name, W / 2, H / 2 - 34);
+
+    // 拼音
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = 'rgba(244, 240, 255, 0.80)';
+    ctx.font = `600 58px ${FONT_STACK}`;
+    ctx.fillText(latin, W / 2, H / 2 + 116);
+
+    // 左右两角的装饰点
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(36, 240, 216, 0.85)';
+    for (const [cx, cy] of [[92, H / 2], [W - 92, H / 2]]) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  } catch (err) {
+    // 宿主缺少文本/路径能力时静默降级：牌子还在，只是没有字
+  }
+  return canvas;
+}
+
+/** 生成铭牌贴图（Three 纹理） */
+function makePlateTexture(opts = {}) {
+  const canvas = drawPlateCanvas(opts);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+/**
+ * 把铭牌挂到角色 group 的头顶。位置的算法只在这里写一份，
+ * main.js 与自检脚本共用，避免两边各算一次导致不一致。
+ *
+ * @returns {{ plate: THREE.Mesh, box: THREE.Box3, headTopY: number, gap: number }}
+ */
+function mountNamePlate(target, opts = {}) {
+  const { width = PLATE.width, gap = PLATE.gap, name = OWNER.name, latin = OWNER.latin } = opts;
+  const box = new THREE.Box3().setFromObject(target);
+  const plate = createNamePlate({ width, name, latin });
+  const halfH = width / 4;               // 牌子是 2:1，半高 = 宽/4
+  const centerY = box.max.y + gap + halfH;
+  plate.position.set(0.02, centerY, 0);
+  target.add(plate);
+  return { plate, box, headTopY: box.max.y, gap, centerY, halfH };
+}
+
+/**
+ * 生成铭牌网格。尺寸按物理比例（宽:高 = 2:1）给，位置由调用方摆放。
+ */
+function createNamePlate(opts = {}) {
+  const { width = PLATE.width, name = OWNER.name, latin = OWNER.latin } = opts;
+  const height = width / 2;
+  const tex = makePlateTexture({ name, latin });
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, height),
+    new THREE.MeshStandardMaterial({
+      map: tex,
+      transparent: true,
+      roughness: 0.52,
+      metalness: 0.04,
+      emissive: 0xffffff,
+      emissiveMap: tex,
+      emissiveIntensity: 0.42,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+  );
+  mesh.name = 'namePlate';
+  mesh.userData.size = { width, height };
+  mesh.userData.text = { name, latin };
+  mesh.userData.texture = tex;
+  return mesh;
+}
+
+__BM.OWNER = OWNER;
+__BM.PLATE = PLATE;
+__BM.drawPlateCanvas = drawPlateCanvas;
+__BM.makePlateTexture = makePlateTexture;
+__BM.createNamePlate = createNamePlate;
+__BM.mountNamePlate = mountNamePlate;
+}
+
+/* ============ 6/6  启动、交互与兜底 ============ */
 (function () {
   var loader = document.getElementById('loader');
   var fallback = document.getElementById('fallback');
@@ -56984,7 +57513,7 @@ __BM.createScene = createScene;
   try {
 { 'use strict';
 const THREE = __BM.THREE;
-const { OrbitControls, createBananaMan, createScene, makeGlowTexture } = __BM;
+const { OrbitControls, createBananaMan, CONFIG, createScene, makeGlowTexture, createNamePlate, OWNER } = __BM;
 /**
  * main.js —— 入口：渲染循环、轨道控制、交互与 UI
  *
@@ -56995,8 +57524,11 @@ const { OrbitControls, createBananaMan, createScene, makeGlowTexture } = __BM;
  *   · 空格                     -> 暂停/继续自转
  *   · R                        -> 复位视角
  *   · T                        -> 切换背景主题
- *   · 自动旋转                 -> 默认开启，手指触碰时自动暂停
+ *   · 自动旋转                 -> 默认开启，手指触碰时自动暂停，松手 2.2 秒后恢复
+ *
+ * 这一版新增：头顶悬浮的名字铭牌，以及"眼睛永远看着镜头"的眼神跟随。
  */
+
 
 
 
@@ -57037,10 +57569,35 @@ scene.add(man.group);
 }
 
 /* ------------------------------------------------------------------ */
+/* 头顶名字铭牌                                                        */
+/* ------------------------------------------------------------------ */
+const { plate: namePlate } = mountNamePlate(man.group);
+namePlate.castShadow = false;
+man.parts.plate = namePlate;
+
+// 铭牌背后的柔光，让它在暗背景下也能看清
+{
+  const c = new THREE.Color(0xffd93b);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeGlowTexture(`rgba(${(c.r * 255) | 0},${(c.g * 255) | 0},${(c.b * 255) | 0},0.55)`),
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    opacity: 0.42,
+    fog: false,
+  }));
+  halo.scale.set(2.6, 2.6, 1);
+  halo.position.copy(namePlate.position);
+  halo.name = 'plateHalo';
+  man.group.add(halo);
+  man.parts.plateHalo = halo;
+}
+
+/* ------------------------------------------------------------------ */
 /* 轨道控制                                                            */
 /* ------------------------------------------------------------------ */
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0.06, 1.85, 0);
+controls.target.set(0.06, 1.90, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.075;
 controls.rotateSpeed = 0.85;
@@ -57054,7 +57611,7 @@ controls.autoRotate = true;
 controls.autoRotateSpeed = 1.05;
 
 const HOME = {
-  pos: new THREE.Vector3(2.35, 3.15, 5.9),
+  pos: new THREE.Vector3(2.35, 3.25, 6.1),
   target: controls.target.clone(),
 };
 camera.position.copy(HOME.pos);
@@ -57095,22 +57652,36 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   playGlint();
 });
 
-/* ---------------- 瞳孔跟随指针 ---------------- */
-function updateGaze(clientX, clientY) {
-  const rect = renderer.domElement.getBoundingClientRect();
-  const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
-  const ny = -((clientY - rect.top) / rect.height) * 2 + 1;
-  for (const k of ['eyeL', 'eyeR']) {
-    const eye = man.parts.faceAnchors[k];
-    if (!eye || !eye.userData.pupil) continue;
-    const pupil = eye.userData.pupil;
-    if (!pupil.userData.home) pupil.userData.home = pupil.position.clone();
-    pupil.position.copy(pupil.userData.home)
-      .addScaledVector(eye.userData.localX, nx * 0.030)
-      .addScaledVector(eye.userData.localY, ny * 0.026);
-  }
+/* ---------------- 拖拽时暂停自转，松手后恢复 ---------------- */
+let resumeTimer = null;
+controls.addEventListener('start', () => {
+  clearTimeout(resumeTimer);
+  controls.autoRotate = false;
+});
+controls.addEventListener('end', () => {
+  clearTimeout(resumeTimer);
+  resumeTimer = setTimeout(() => {
+    controls.autoRotate = !paused;
+  }, 2200);
+});
+
+/* ---------------- 眼神跟随：眼睛永远看向镜头 ---------------- */
+const _camLocal = new THREE.Vector3();
+const _faceCenter = man.surface.point(CONFIG.faceT, CONFIG.faceTheta);
+
+function updateGazeTowardCamera() {
+  const anchors = man.parts.faceAnchors;
+  const eyeL = anchors.eyeL;
+  if (!eyeL) return;
+  // 相机位置换算到角色自身坐标系，再投影到脸平面的两个轴上
+  _camLocal.copy(camera.position);
+  man.group.worldToLocal(_camLocal);
+  const dir = _camLocal.sub(_faceCenter).normalize();
+  const dx = dir.dot(eyeL.userData.localX);
+  const dy = dir.dot(eyeL.userData.localY);
+  // 全屏视差 + 轻微朝向混合，正对时略微上抬，看起来更活泼
+  man.setGaze(dx * 0.85, dy * 0.85 + 0.06);
 }
-window.addEventListener('pointermove', (e) => updateGaze(e.clientX, e.clientY));
 
 /* ---------------- 闪光反馈 ---------------- */
 const GLINT_TEXTURE = makeGlowTexture('rgba(255,255,255,0.95)');
@@ -57173,10 +57744,19 @@ function cycleTheme() {
   toast('背景主题：' + label);
 }
 
+function togglePlate() {
+  if (!btnPlate) return;
+  namePlate.visible = !namePlate.visible;
+  if (man.parts.plateHalo) man.parts.plateHalo.visible = namePlate.visible;
+  btnPlate.classList.toggle('on', namePlate.visible);
+  toast(namePlate.visible ? `铭牌已显示：${OWNER.name}` : '铭牌已隐藏');
+}
+
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') { e.preventDefault(); togglePause(); }
   else if (e.key === 'r' || e.key === 'R') resetView();
   else if (e.key === 't' || e.key === 'T') cycleTheme();
+  else if (e.key === 'n' || e.key === 'N') togglePlate();
 });
 
 /* ------------------------------------------------------------------ */
@@ -57186,6 +57766,7 @@ const btnRotate = document.getElementById('btn-rotate');
 const btnReset = document.getElementById('btn-reset');
 const btnTheme = document.getElementById('btn-theme');
 const btnShot = document.getElementById('btn-shot');
+const btnPlate = document.getElementById('btn-plate');
 
 if (btnRotate) {
   btnRotate.classList.add('on');
@@ -57193,6 +57774,10 @@ if (btnRotate) {
 }
 if (btnReset) btnReset.addEventListener('click', () => { resetView(); btnReset.blur(); });
 if (btnTheme) btnTheme.addEventListener('click', () => { cycleTheme(); btnTheme.blur(); });
+if (btnPlate) {
+  btnPlate.classList.add('on');
+  btnPlate.addEventListener('click', () => { togglePlate(); btnPlate.blur(); });
+}
 if (btnShot) {
   btnShot.addEventListener('click', () => {
     // 先渲染一帧，再取像素，确保拿到的是当前画面
@@ -57272,7 +57857,21 @@ function animate() {
     man.group.scale.set(breathe * squash, (2 - breathe) / squash, breathe * squash);
   }
 
-  man.update(t, wobbleGain);
+  man.update(t, wobbleGain, dt);
+  updateGazeTowardCamera();
+
+  // 铭牌水平朝向镜头，任何角度看都是正的
+  if (namePlate.visible) {
+    _camLocal.copy(camera.position);
+    man.group.worldToLocal(_camLocal);
+    namePlate.rotation.y = Math.atan2(
+      _camLocal.x - namePlate.position.x,
+      _camLocal.z - namePlate.position.z,
+    );
+    if (man.parts.plateHalo) {
+      man.parts.plateHalo.scale.setScalar(2.5 + Math.sin(t * 1.6) * 0.16);
+    }
+  }
 
   world.update(dt, t);
   controls.update();
