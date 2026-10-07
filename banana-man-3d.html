@@ -56119,18 +56119,24 @@ const PALETTE = {
 /* ------------------------------------------------------------------ */
 const CONFIG = {
   curveP0: [-0.20, 0.40, 0],
-  curveP1: [0.54, 1.52, 0],
-  curveP2: [-0.19, 2.70, 0],
+  curveP1: [0.56, 1.60, 0],
+  curveP2: [-0.24, 3.15, 0],
 
   bodyRadius: 0.405,
-  bodySegs: 160,
+  bodySegs: 190,
   radialSegs: 52,
   ribCount: 5,
   ribAmp: 0.062,
   ribSecond: 0.26,
   squashZ: 1.035,
-  taperTop: 0.50,
-  taperBottom: 0.40,
+  taperBottom: 0.42,
+
+  // 顶部「果柄段」：不做成单独的零件，而是让同一张果皮曲面从 t=stalkT0 开始
+  // 平滑收细到 stalkRadius（归一化，× bodyRadius ≈ 0.061 世界单位）。
+  // 这样果柄与果身是同一张连续曲面，永远不可能对不齐，也天然跟着身体一起晃。
+  stalkT0: 0.78,
+  stalkT1: 0.94,
+  stalkRadius: 0.150,
 
   faceT: 0.70,
   faceTheta: Math.PI / 2,
@@ -56165,14 +56171,22 @@ function ribFactor(theta, amp, ribCount, second = 0.26) {
 
 function makeRadiusFn(cfg) {
   const R = cfg.bodyRadius;
-  const { taperTop, taperBottom } = cfg;
+  const { taperBottom, stalkT0, stalkT1, stalkRadius } = cfg;
   return (t) => {
     const tt = THREE.MathUtils.clamp(t, 0, 1);
-    let r = 0.30 + 0.70 * Math.pow(Math.sin(Math.PI * tt), 0.62);
-    r *= 1 - taperTop * smoothstep(0.62, 1.0, tt);
-    r *= 1 - taperBottom * (1 - smoothstep(0.0, 0.32, tt));
-    return R * r;
+    // 果身：中段最粗，两端收细
+    let r = 0.32 + 0.68 * Math.pow(Math.sin(Math.PI * tt), 0.60);
+    // 底部果蒂收口
+    r *= 1 - taperBottom * (1 - smoothstep(0.0, 0.30, tt));
+    // 顶部平滑过渡到果柄段
+    const w = smoothstep(stalkT0, stalkT1, tt);
+    return R * (r * (1 - w) + stalkRadius * w);
   };
+}
+
+/** 纵棱强度：到了果柄段就收敛成光滑的一根，不要还带着果身的棱 */
+function ribAmpAt(cfg, t) {
+  return cfg.ribAmp * (1 - smoothstep(cfg.stalkT0, cfg.stalkT1, THREE.MathUtils.clamp(t, 0, 1)));
 }
 
 /** 曲线在参数 t 处的稳定标架：N 在曲线平面内，B 恒为 +Z */
@@ -56192,21 +56206,25 @@ function makeSweepGeometry(curve, radiusFn, opt = {}) {
     ribAmp = 0.062,
     ribSecond = 0.26,
     squashZ = 1,
+    ribFade = null,        // [t0, t1]：该区间内棱强度渐隐为 0（果柄段用）
+    colorFn = null,        // (t, theta) => [r, g, b]（线性工作空间）
   } = opt;
 
   const positions = [];
   const uvs = [];
   const indices = [];
+  const colors = colorFn ? [] : null;
 
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const P = curve.getPointAt(t);
     const { N, B } = frameAt(curve, t);
     const base = radiusFn(t);
+    const amp = ribFade ? ribAmp * (1 - smoothstep(ribFade[0], ribFade[1], t)) : ribAmp;
 
     for (let j = 0; j <= radialSegments; j++) {
       const theta = (j / radialSegments) * Math.PI * 2;
-      const r = base * ribFactor(theta, ribAmp, ribCount, ribSecond);
+      const r = base * ribFactor(theta, amp, ribCount, ribSecond);
       const cx = Math.cos(theta) * r;
       const cy = Math.sin(theta) * r * squashZ;
       positions.push(
@@ -56215,6 +56233,10 @@ function makeSweepGeometry(curve, radiusFn, opt = {}) {
         P.z + N.z * cx + B.z * cy,
       );
       uvs.push(j / radialSegments, t);
+      if (colors) {
+        const c = colorFn(t, theta);
+        colors.push(c[0], c[1], c[2]);
+      }
     }
   }
 
@@ -56233,9 +56255,11 @@ function makeSweepGeometry(curve, radiusFn, opt = {}) {
   const startCenterIdx = positions.length / 3;
   positions.push(capStart.x, capStart.y, capStart.z);
   uvs.push(0.5, 0);
+  if (colors) colors.push(...colorFn(0, 0));
   const endCenterIdx = positions.length / 3;
   positions.push(capEnd.x, capEnd.y, capEnd.z);
   uvs.push(0.5, 1);
+  if (colors) colors.push(...colorFn(1, 0));
 
   const topBase = segments * stride;
   for (let j = 0; j < radialSegments; j++) {
@@ -56246,6 +56270,7 @@ function makeSweepGeometry(curve, radiusFn, opt = {}) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  if (colors) geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   geo.computeBoundingSphere();
@@ -56267,7 +56292,7 @@ function makeSurface(cfg) {
     const tc = THREE.MathUtils.clamp(t, 0, 1);
     const P = curve.getPointAt(tc);
     const { N, B } = frameAt(curve, tc);
-    const r = radiusFn(tc) * ribFactor(theta, cfg.ribAmp, cfg.ribCount, cfg.ribSecond);
+    const r = radiusFn(tc) * ribFactor(theta, ribAmpAt(cfg, tc), cfg.ribCount, cfg.ribSecond);
     const c = Math.cos(theta) * r;
     const s = Math.sin(theta) * r * cfg.squashZ;
     return new THREE.Vector3(
@@ -56300,7 +56325,16 @@ function createBananaMan(cfg = CONFIG) {
   const { curve, radiusFn, point, normal } = S;
 
   /* ------- 材质 ------- */
-  const matPeel = new THREE.MeshStandardMaterial({ color: PALETTE.peel, roughness: 0.62, metalness: 0.02 });
+  // 果皮是同一张网格：靠顶点色区分「果身的黄」与「顶部果柄的褐」，
+  // 这样果柄不是一个独立零件，接缝天然不存在。
+  const peelBody = new THREE.Color(PALETTE.peel);
+  const peelStalk = new THREE.Color(PALETTE.tip);
+  const matPeel = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    vertexColors: true,
+    roughness: 0.62,
+    metalness: 0.02,
+  });
   const matPeelDark = new THREE.MeshStandardMaterial({ color: PALETTE.peelDark, roughness: 0.66, metalness: 0.02 });
   const matTip = new THREE.MeshStandardMaterial({ color: PALETTE.tip, roughness: 0.78 });
   const matTipDark = new THREE.MeshStandardMaterial({ color: PALETTE.tipDark, roughness: 0.82 });
@@ -56320,6 +56354,16 @@ function createBananaMan(cfg = CONFIG) {
     ribAmp: cfg.ribAmp,
     ribSecond: cfg.ribSecond,
     squashZ: cfg.squashZ,
+    ribFade: [cfg.stalkT0, cfg.stalkT1],
+    // 果身黄 -> 果柄褐，过渡带跟半径收细同步（stalkT0..stalkT1）
+    colorFn: (t) => {
+      const w = smoothstep(cfg.stalkT0, cfg.stalkT1, t);
+      return [
+        peelBody.r * (1 - w) + peelStalk.r * w,
+        peelBody.g * (1 - w) + peelStalk.g * w,
+        peelBody.b * (1 - w) + peelStalk.b * w,
+      ];
+    },
   });
   const wobbleUniforms = { uTime: { value: 0 }, uWobble: { value: cfg.wobble } };
   matPeel.onBeforeCompile = (shader) => {
@@ -56329,7 +56373,7 @@ function createBananaMan(cfg = CONFIG) {
       .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform float uWobble;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         {
-          float h = clamp((transformed.y - 0.35) / 2.30, 0.0, 1.0);
+          float h = clamp((transformed.y - 0.35) / 3.00, 0.0, 1.0);
           float w = h * h * uWobble;
           transformed.x += sin(uTime * 1.7 + h * 3.1) * 0.10 * w;
           transformed.z += cos(uTime * 1.3 + 1.7 + h * 2.3) * 0.055 * w;
@@ -56342,39 +56386,21 @@ function createBananaMan(cfg = CONFIG) {
   body.receiveShadow = true;
   group.add(body);
 
-  /* ------- 果柄（顶部蒂）与花蒂（底部） -------
-     果柄的位置曾经是错的：锚在 t=0.985 处，而那里的果身半径只剩 0.0825，
-     比果柄底座还细，于是看起来像在尖端扣了一个悬空的盖子。
-     正确做法是从「曲线端点」出发、沿切线往回埋一段，让底座真正长进果肉里：
-     埋进去的位置果身半径约 0.117，和底座半径基本相等，接缝才是自然的。
-     另外用一个外层 pivot 承载摆动，让果柄跟着身体一起晃（原来是死的）。
-  ------------------------------------------- */
+  /* ------- 蒂帽（果柄顶端的小帽子）-------
+     果柄本身已经是果皮曲面向上延长出来的一段（见上面的 stalkT0/T1 + 顶点色），
+     这里只剩顶端一个小小的深色帽子收口，尺寸故意小于该处果柄半径，只做点缀。
+  ------------------------------------- */
   const topTangent = curve.getTangentAt(1).normalize();
-  const stemPivot = new THREE.Group();
-  stemPivot.name = 'stemPivot';
-  stemPivot.position.copy(curve.getPointAt(1));      // 曲线端点，不是靠里的采样点
-
-  // 埋深 0.18 时底座中心到最近体表点还有约 0.011 的余量（实测）：
-  // 底座整圈都在果肉内，接缝处才是「果柄从果肉里长出来」而不是「盖在上面」。
-  const STEM_BURY = 0.18;
-  const stemGroup = new THREE.Group();
-  stemGroup.name = 'stem';
-  stemGroup.position.copy(topTangent).multiplyScalar(-STEM_BURY);
-  stemGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), topTangent);
-
-  // 底座半径 0.106 < 该处果肉半径 0.120，保证底座整圈都埋在果肉里
-  const stemLow = new THREE.Mesh(new THREE.CylinderGeometry(0.070, 0.106, 0.30, 18), matTip);
-  stemLow.position.y = 0.06;
-  const stemNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.054, 0.070, 0.14, 18), matTipDark);
-  stemNeck.position.y = 0.27;
-  stemNeck.rotation.z = 0.10;
-  const stemCap = new THREE.Mesh(new THREE.SphereGeometry(0.058, 14, 12), matTipDark);
-  stemCap.position.set(0.013, 0.336, 0);
-  stemCap.scale.set(1, 0.74, 1);
-  stemGroup.add(stemLow, stemNeck, stemCap);
-  stemGroup.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-  stemPivot.add(stemGroup);
-  group.add(stemPivot);
+  const stalkTipRadius = cfg.bodyRadius * cfg.stalkRadius;
+  const tipCap = new THREE.Mesh(
+    new THREE.SphereGeometry(stalkTipRadius * 1.06, 16, 12),
+    matTipDark,
+  );
+  tipCap.name = 'tipCap';
+  tipCap.position.copy(point(0.995, cfg.faceTheta));
+  tipCap.scale.set(1, 0.80, 1);
+  tipCap.castShadow = true;
+  group.add(tipCap);
 
   const tailTangent = curve.getTangentAt(0).normalize();
   const blossom = new THREE.Group();
@@ -56647,26 +56673,23 @@ function createBananaMan(cfg = CONFIG) {
     const s = 1 + Math.sin(time * 2.0) * 0.04;
     smile.scale.set(s, s, 1);
 
-    // 果柄摆动：相位与顶点着色器里身体顶端（h = 1）的位移保持一致，
-    // 位移量 0.10 / 0.055 换算成绕轴旋转约 0.048 / 0.030 弧度。
-    // 忽略 uWobble 会让"被点一下"时果柄掉队，所以乘上同一个增益。
-    const wob = cfg.wobble + wobbleGain;
-    stemPivot.rotation.z = -Math.sin(time * 1.7 + 3.1) * 0.062 * wob;
-    stemPivot.rotation.x = Math.cos(time * 1.3 + 1.7 + 2.3) * 0.040 * wob;
-
     applyGaze(Math.min(1, dt * 9));
   }
 
   return {
     group,
+    /// 果柄是果皮曲面 t >= stalkT0 的一段，需要它的世界半径供自检使用
+    stalk: {
+      t0: cfg.stalkT0,
+      t1: cfg.stalkT1,
+      radius: cfg.bodyRadius * cfg.stalkRadius,
+      tip: point(1, cfg.faceTheta),
+      tangent: topTangent.clone(),
+    },
     parts: {
       body,
-      tipTop: stemLow,
+      tipCap,
       tipBottom: blossomBody,
-      stemPivot,
-      stemGroup,
-      stemLow,
-      stemNeck,
       blossom,
       smile,
       tongue,
@@ -56798,18 +56821,24 @@ ${GLSL_SRGB}
     float band = bmFbm(q + vec3(0.0, uTime * 0.045, uTime * 0.03));
     band = smoothstep(0.42, 0.92, band);
     float horizon = smoothstep(0.18, 0.55, h) * (1.0 - smoothstep(0.62, 1.0, h));
-    col = mix(col, uColorD, band * horizon * 0.62);
+    // 点缀色只做"极光带"的提亮，不能整片刷上去——
+    // 之前 0.62 的混合量把整个天穹洗成一片青色，主角也被映得发绿。
+    col = mix(col, uColorD, band * horizon * 0.34);
 
-    // 第二层：更慢、更大尺度的色团，制造"不对劲"的抽象流动
+    // 第二层：更慢、更大尺度的色团。这里刻意混向主色 uColorB 而不是点缀色，
+    // 让天空出现"紫 / 青"对比，而不是单一的青色渐变。
     float warp = bmFbm(vec3(dir.x * 1.1, dir.y * 1.4 + uTime * 0.02, dir.z * 1.1));
-    col = mix(col, uColorD, smoothstep(0.55, 1.0, warp) * 0.22);
-    col = mix(col, uColorB, smoothstep(0.10, 0.0, abs(warp - 0.45)) * 0.18);
+    col = mix(col, uColorB, smoothstep(0.55, 1.0, warp) * 0.42);
+    // 注意：smoothstep 的 edge0 必须小于 edge1，反着写是未定义行为。
+    // 这里要的是"warp 越接近 0.45 越亮"，正确写法是 1 - smoothstep(...)。
+    float ridge = 1.0 - smoothstep(0.0, 0.16, abs(warp - 0.45));
+    col = mix(col, uColorD, ridge * 0.16);
 
     // 地平线附近的柔光
-    col += uColorC * pow(1.0 - smoothstep(0.0, 0.30, h), 3.0) * 0.32;
+    col += uColorC * pow(1.0 - smoothstep(0.0, 0.30, h), 3.0) * 0.22;
 
-    // 轻微暗角，突出主体
-    float vig = smoothstep(0.20, 0.02, h);
+    // 轻微暗角，突出主体（同样注意边界顺序：1 - smoothstep 才是"越靠下越暗"）
+    float vig = 1.0 - smoothstep(0.02, 0.20, h);
     col *= 1.0 - vig * 0.16;
 
     gl_FragColor = vec4(bmToSRGB(col), 1.0);
@@ -56856,9 +56885,9 @@ ${GLSL_SRGB}
     swirl = pow(swirl, 3.0);
 
     vec3 col = mix(uColorA, uColorB, smoothstep(0.0, 1.0, r));
-    col = mix(col, uColorC, rings * 0.55);
-    col = mix(col, uColorC, swirl * 0.30 * (1.0 - smoothstep(0.1, 0.9, r)));
-    col += uColorC * pow(1.0 - clamp(r, 0.0, 1.0), 3.0) * 0.45;
+    col = mix(col, uColorC, rings * 0.34);
+    col = mix(col, uColorC, swirl * 0.20 * (1.0 - smoothstep(0.1, 0.9, r)));
+    col += uColorC * pow(1.0 - clamp(r, 0.0, 1.0), 3.0) * 0.22;
 
     // 向外淡出：地面没有边界，直接溶进背景
     float alpha = uOpacity * (1.0 - smoothstep(0.30, 0.98, r));
@@ -56872,7 +56901,8 @@ ${GLSL_SRGB}
 /*   否则会渲染成一片死黑。这里用 canvas 画一张渐变天空 + 灯位光斑，       */
 /*   赋给 scene.environment，既点亮材质又让香蕉有环境反射。                */
 /* ------------------------------------------------------------------ */
-function makeEnvTexture(theme) {
+function makeEnvTexture(theme, opts = {}) {
+  const { neutral = false } = opts;
   const W = 512, H = 256;
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
@@ -56880,11 +56910,20 @@ function makeEnvTexture(theme) {
 
   const g = ctx.createLinearGradient(0, 0, 0, H);
   const hex = (v) => '#' + new THREE.Color(v).getHexString();
-  g.addColorStop(0.00, hex(theme.skyA));
-  g.addColorStop(0.42, hex(theme.skyB));
-  g.addColorStop(0.62, hex(theme.skyC));
-  g.addColorStop(0.80, hex(theme.ground));
-  g.addColorStop(1.00, '#05030d');
+  if (neutral) {
+    // 角色专用的照明环境：整体是「亮灰的中性天光」而不是主题色。
+    // 背景再花，也不该把主角染成一坨深绿/深紫——那是加了彩色 envmap 的必然结果。
+    g.addColorStop(0.00, '#e8ecff');
+    g.addColorStop(0.45, '#b9c0d8');
+    g.addColorStop(0.70, '#6b6f88');
+    g.addColorStop(1.00, '#23202e');
+  } else {
+    g.addColorStop(0.00, hex(theme.skyA));
+    g.addColorStop(0.42, hex(theme.skyB));
+    g.addColorStop(0.62, hex(theme.skyC));
+    g.addColorStop(0.80, hex(theme.ground));
+    g.addColorStop(1.00, '#05030d');
+  }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 
@@ -56923,19 +56962,19 @@ function createScene(renderer) {
       skyA: 0x120a2a, skyB: 0x5b2b8f, skyC: 0x1d3f8f, skyD: 0x00e7d0,
       fog: 0x150f2e, grid: 0x8f5cff, ground: 0x1a1236,
       key: 0xfff2b0, fill: 0x7f5cff, rimc: 0x24f0d8,
-      floorA: 0x2a1c5e, floorB: 0x0d0722, floorC: 0x24f0d8,
+      floorA: 0x1d1440, floorB: 0x08051a, floorC: 0x24f0d8,
     },
     sunset: {
       skyA: 0x1a0a1f, skyB: 0x9c2f6b, skyC: 0x3a1b6b, skyD: 0xffb03a,
       fog: 0x2a1030, grid: 0xff7ad0, ground: 0x2a1230,
       key: 0xffe0a0, fill: 0xff5fa8, rimc: 0xffc46b,
-      floorA: 0x5e1c44, floorB: 0x1e0722, floorC: 0xffa83a,
+      floorA: 0x3c1230, floorB: 0x140518, floorC: 0xffa83a,
     },
     deepsea: {
       skyA: 0x03122a, skyB: 0x0d5f7a, skyC: 0x062a52, skyD: 0x5ff2ff,
       fog: 0x06182e, grid: 0x35d7ff, ground: 0x08203a,
       key: 0xd8fbff, fill: 0x2fa9ff, rimc: 0x6bffe8,
-      floorA: 0x0a3a63, floorB: 0x03101f, floorC: 0x6bffe8,
+      floorA: 0x082a48, floorB: 0x020b16, floorC: 0x6bffe8,
     },
   };
   let themeName = 'aurora';
@@ -56965,16 +57004,37 @@ function createScene(renderer) {
 
   scene.fog = new THREE.FogExp2(theme.fog, 0.036);
 
-  // 环境贴图：让 standard 材质有环境光与反射
+  // 背景用的彩色环境贴图（金属泡靠它出流动高光）
   let envTex = makeEnvTexture(theme);
   scene.environment = envTex;
   scene.environmentIntensity = 0.85;
 
+  // 角色专用的中性照明环境：挂在角色的 group 上，
+  // 只有角色材质吃它，背景永远染不到主角身上。
+  const charEnvTex = makeEnvTexture(theme, { neutral: true });
+  // 后续由 main.js 挂到角色 group 上，这里先暴露出去
+  let characterEnv = charEnvTex;
+  function setCharacterEnv(target) {
+    target.traverse((o) => {
+      if (!o.isMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (m && 'envMap' in m) {
+          m.envMap = characterEnv;
+          m.envMapIntensity = 1.15;
+          m.needsUpdate = true;
+        }
+      }
+    });
+  }
+
   /* ---------- 灯光 ---------- */
-  const hemi = new THREE.HemisphereLight(0xbfd0ff, 0x2a1a4a, 0.30);
+  // 半球光用中性色、抬高地面色：原来地面是 0x2a1a4a 深紫，
+  // 角色的下半身几乎吃不到任何光，看起来发黑。
+  const hemi = new THREE.HemisphereLight(0xd8e2ff, 0x6b6480, 0.72);
   scene.add(hemi);
 
-  const key = new THREE.DirectionalLight(theme.key, 2.1);
+  const key = new THREE.DirectionalLight(theme.key, 1.55);
   key.position.set(4.2, 7.5, 5.0);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -56991,13 +57051,20 @@ function createScene(renderer) {
   key.shadow.camera.updateProjectionMatrix();
   scene.add(key);
 
-  const fill = new THREE.PointLight(theme.fill, 26, 22, 2);
+  // 补光改成两盏偏中性的方向光：点光源的彩色衰减在近距离会把角色一侧
+  // 直接染成主题色（曾经的青绿色香蕉就是这么来的）。
+  const fill = new THREE.DirectionalLight(0xcdd8ff, 0.85);
   fill.position.set(-4.0, 3.0, -3.2);
   scene.add(fill);
 
-  const rim = new THREE.PointLight(theme.rimc, 20, 20, 2);
+  const rim = new THREE.DirectionalLight(theme.rimc, 0.70);
   rim.position.set(3.0, 1.2, -4.4);
   scene.add(rim);
+
+  // 背后补一盏，保证绕到背面看时角色依然亮着
+  const back = new THREE.DirectionalLight(0xffffff, 0.55);
+  back.position.set(-1.5, 2.4, -5.0);
+  scene.add(back);
 
   /* ---------- 地面：扭曲色场 ---------- */
   const floorUniforms = {
@@ -57005,7 +57072,7 @@ function createScene(renderer) {
     uColorA: { value: new THREE.Color(theme.floorA) },
     uColorB: { value: new THREE.Color(theme.floorB) },
     uColorC: { value: new THREE.Color(theme.floorC) },
-    uOpacity: { value: 0.95 },
+    uOpacity: { value: 0.58 },
   };
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(56, 56, 1, 1),
@@ -57182,11 +57249,12 @@ function createScene(renderer) {
 
   /* ---------- 体积光斑 ---------- */
   const glows = [];
+  // 光斑必须克制：9.5 大小 + 加法混合 + 无深度写入，会直接糊满整个屏幕
+  // （曾经把画面洗成一片青绿色的元凶），所以缩小尺寸、降透明度。
   const glowDefs = [
-    [theme.rimc, 9.5, [5.6, 3.4, -4.6]],
-    [theme.fill, 8.4, [-5.8, 2.2, -3.0]],
-    [theme.grid, 7.6, [1.2, 5.4, -6.2]],
-    [theme.skyD, 6.2, [-2.4, 4.6, 5.4]],
+    [theme.rimc, 3.6, [5.6, 3.4, -4.6]],
+    [theme.fill, 3.2, [-5.8, 2.2, -3.0]],
+    [theme.grid, 2.8, [1.2, 5.4, -6.2]],
   ];
   for (const [color, size, pos] of glowDefs) {
     const c = new THREE.Color(color);
@@ -57196,6 +57264,7 @@ function createScene(renderer) {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false,
+      opacity: 0.55,
     }));
     sp.scale.set(size, size, 1);
     sp.position.set(...pos);
@@ -57299,9 +57368,10 @@ function createScene(renderer) {
     scene, camera, sky, ground, floatGroup, ringGroup, stars,
     update, setTheme, nextTheme,
     get themeName() { return themeName; },
-    lights: { hemi, key, fill, rim },
+    lights: { hemi, key, fill, rim, back },
     fog: scene.fog,
     floorUniforms,
+    setCharacterEnv,
   };
 }
 
@@ -57559,6 +57629,9 @@ const world = createScene(renderer);
 const { scene, camera } = world;
 
 const man = createBananaMan();
+// 背景的环境贴图是彩色的（金属泡要用），但主角不能吃它：
+// 挂一份中性照明环境到角色身上，避免果皮被背景色染暗、染色。
+world.setCharacterEnv(man.group);
 scene.add(man.group);
 
 // 角色整体稍微抬高，让脚正好落在地面附近
